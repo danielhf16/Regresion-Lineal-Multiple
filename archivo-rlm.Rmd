@@ -1,0 +1,151 @@
+---
+title: "Regresión lineal múltiple"
+author: "Daniel Hernan Freire Navarrete"
+date: "2 de agosto de 2015"
+output: html_document
+---
+
+### Introducción
+Se quiere realizar una regresión multiple de la data Poblacion , para asi poder interpretar los resultados y poder dar las conclusiones deacuerdo a los resultados obtenidos, además de detallar los pasos realizados para realizar nuestra regresión multilineal. 
+
+### Realización de la regresión lineal multiple.
+
+Primero leemos las datas *poblacion1* y *poblacion2*, para esto cargamos primero   _library(readxl)_ luego unimos las datas *poblacion1* y *poblacion2* la cual llamaremos *poblacion*, todo esto se realizo con las siguientes lineas de codigo
+```{r,echo=TRUE,eval=TRUE}
+library(readxl)
+poblacion1 <- read_excel("poblacion1.xlsx",sheet = 1,col_names = TRUE,na = "")
+poblacion2 <- read_excel("poblacion2.xlsx",sheet = 1,col_names = TRUE,na = "")
+poblacion <- merge(x = poblacion1,y = poblacion2, by = "identificador", suffixes = c("","")) 
+str(poblacion)
+```
+
+Analizando la data poblacion se tiene que la data disponemos de `r nrow(poblacion)` observaciones de `r ncol(poblacion)` variables.
+
+Se requiere explicar la varible `r names(poblacion)[2]` en función de los  regresores `r names(poblacion)[1]`,`r names(poblacion)[3]`,`r names(poblacion)[4]`,`r names(poblacion)[5]`,`r names(poblacion)[6]`,`r names(poblacion)[7]`,`r names(poblacion)[8]`,`r names(poblacion)[9]`,`r names(poblacion)[10]`. En lugar de utilizar la función `View(poblacion)` para vizualizar el conjunto de datos empleamos la función `datatable()` del paquete `DT()`, esta función permite crear un __HTML widget__ . Se tiene la siguiente tabla,
+
+
+```{r,echo=TRUE,eval=TRUE}
+library(DT)
+datatable(poblacion)
+```
+
+### Modelo de regresión lineal múltiple
+Primero realizamos la regresion con todas la variables deacuero al siguiente codigo
+
+```{r,echo=TRUE,eval=TRUE}
+reg<- lm(poblacion ~ var.pobl.mayor + menores.18  + tasa.crimen+part.almz.escl+var.ingresos+var.tasa.crimen, poblacion)
+summary(reg) 
+```
+
+Ahora vemos que regresores son significativo y realizamos la regresion para los regresores significativos
+```{r,echo=TRUE,eval=TRUE}
+reg1<-step(reg,direction="backward")
+summary(reg1)
+```
+Notamos que solo la variabre tasa.crimen es significativa para nuestro modelo.
+
+El modelo esta  dado por la ecuación
+$$\hat{`r substring(names(poblacion)[2],1,2)`} =`r reg1$coefficients[1]` 
+`r reg1$coefficients[2]`  \hat{`r substring(names(poblacion)[7],1,2)`} 
+$$
+
+
+### Interpretación
+
+__Interpretación modelo:__ Al igual que en regresión lineal simple, los coeficientes $\beta$ van a indicar el incremento (o disminución) en la población por el incremento unitario de la correspondiente variable explicativa. Por lo tanto, estos coeficientes van a tener las correspondientes unidades de medida. En este caso _Si `r names(poblacion)[7]` se incrementa en una unidad, entonces `r names(poblacion)[2]`
+`r tex <-"aumenta"; if(reg1$coefficients[2]<0) (tex<-"disminuye");tex` en promedio `r reg1$coefficients[2]` unidades._
+
+__Interpretación $R^2$:__ _El modelo de regresión lineal múltiple obtenido explica el `r paste(100*summary(reg1)$r.squared,"%")` de la variabilidad total._
+
+### Pruebas de hipótesis
+
+$$H_0: \beta_1 =0$$
+$$H_1: \beta_1 \neq 0$$
+
+Se sabe que  $t= `r summary(reg1)$coefficients[1,3]`$ es `r tex<-"menor"; if(summary(reg1)$coefficients[1,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"mayor"; tex` que 
+$t_{`r (nrow(poblacion)-2)`}(\frac{\alpha}{2})= `r qt(0.975 , df =nrow(poblacion)-2)`$
+`r tex<-"no se rechaza"; if(summary(reg1)$coefficients[1,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"se rechaza"; tex`
+$H_0: \beta_1=0$.
+
+
+$$H_0: \beta_2 =0$$
+$$H_1: \beta_2 \neq 0$$
+
+Se sabe que  $t= `r summary(reg1)$coefficients[2,3]`$ es `r tex<-"menor"; if(summary(reg1)$coefficients[2,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"mayor"; tex` que 
+$t_{`r (nrow(poblacion)-2)`}(\frac{\alpha}{2})= `r qt(0.975 , df =nrow(poblacion)-2)`$
+`r tex<-"se rechaza"; if(summary(reg1)$coefficients[1,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"no se rechaza"; tex`
+$H_0: \beta_2=0$.
+
+### Análisis de varianza
+
+Realizando la tabla __ANOVA__ tenemos los siguientes resultados:
+```{r,echo=TRUE,eval=TRUE}
+anova <- aov(reg1)
+summary(anova)[[1]]
+```
+
+### Intervalos de confianza
+```{r}
+confint(reg1,level = 0.95)
+```
+```{r}
+confint(reg1,level = 0.90)
+```
+
+### Gráficos residuales
+
+```{r}
+(u_t <- reg1$residuals) #residuos
+(y_t <- reg1$fitted.values) #prediccion
+data <- data.frame(poblacion, y_t,u_t)
+datatable(data,filter="top", options = list(
+  searching = TRUE,
+  pageLength = 5,
+ lengthMenu = c(5, 10, 15)
+ ))
+```
+
+```{r, fig.align="center",fig.width=5,fig.height=4}
+library(ggplot2)
+(u_t <- reg1$residuals)
+
+g <- ggplot(data = poblacion, aes(x=poblacion, y=u_t))
+g + geom_point()
+
+
+
+g <- ggplot(data = poblacion, aes(x=tasa.crimen, y=u_t))
+g + geom_point()
+
+
+
+#media de los residuos
+mean(reg1$residuals) 
+
+# graf normal
+qqnorm(u_t)
+qqline(u_t)
+
+# Pronosticos vs residuos
+(y_t <- reg1$fitted.values)
+plot(u_t,y_t)
+
+# Puntos singulares
+library(car)
+outlierTest(reg1) # Bonferonni p-value for most extreme obs
+qqPlot(reg1, main="QQ Plot") #qq plot for studentized residuo 
+
+# puntos influyentes
+# Cook's plot
+# D > 2/k
+cutoff <- 2/((nrow(poblacion)-length(reg1$coefficients))) 
+plot(reg1, which=4, cook.levels=cutoff)
+poblacion[40,]
+
+```
+
+### Conclusiones
+De los resultados obtenidos de la regresion lineal múltiple se puede asegurar que la variabilidad esta dada en `r paste(100*summary(reg1)$r.squared,"%")`. Existen observaciones influyentes en los parámetros de la regresión. Se conclye tambien que nuestra regresión es significante puesto que el p-valor es menor que 0.05. Ademas se notó que nuestra variable o regresor significativo fue unicamente tasa.crimen.
+
+
+
