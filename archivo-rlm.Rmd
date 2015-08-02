@@ -71,9 +71,9 @@ $H_0: \beta_1=0$.
 $$H_0: \beta_2 =0$$
 $$H_1: \beta_2 \neq 0$$
 
-Se sabe que  $t= `r summary(reg1)$coefficients[2,3]`$ es `r tex<-"menor"; if(summary(reg1)$coefficients[2,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"mayor"; tex` que 
+Se sabe que  $t= `r abs(summary(reg1)$coefficients[2,3])`$ es `r tex<-"menor"; if(abs(summary(reg1)$coefficients[2,3])>qt(0.975 , df =nrow(poblacion)-2)) tex<-"mayor"; tex` que 
 $t_{`r (nrow(poblacion)-2)`}(\frac{\alpha}{2})= `r qt(0.975 , df =nrow(poblacion)-2)`$
-`r tex<-"se rechaza"; if(summary(reg1)$coefficients[1,3]>qt(0.975 , df =nrow(poblacion)-2)) tex<-"no se rechaza"; tex`
+`r tex<-"no se rechaza"; if(abs(summary(reg1)$coefficients[1,3])>qt(0.975 , df =nrow(poblacion)-2)) tex<-" se rechaza"; tex`
 $H_0: \beta_2=0$.
 
 ### Análisis de varianza

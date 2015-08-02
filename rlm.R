@@ -172,8 +172,8 @@ summary(anova)[[1]]
 #la regresion es significativa puesto que el p-valor es < 0.05
 #ahora analisisamos la siginificancia de los parametros individuales
 #vemos que para el intercepto 11.1147 > qt(0.975 , df =nrow(poblacion)-2) es decir  
-# se rechaza Ho, mientras e para la variable tasa.crimen -2.493< df =nrow(poblacion)-2) ,
-# es decir que no se rechaza Ho.
+# se rechaza Ho, mientras e para la variable tasa.crimen >2.493< df =nrow(poblacion)-2) ,
+# es decir que  se rechaza Ho.
 
 
 # 2.10 analisis de los residuos
